@@ -1,7 +1,19 @@
+import processing.pdf.*;
+
+import interfascia.*;
+
+GUIController c;
+IFTextField t1, t2, txtNomeAula;
+IFLabel l1, l2;
+IFButton b, b1;
+PFont Font1;
+
+boolean record;
+
 int btnX_pos = 900;        // posizione e dati pulsantiera
 int btnY_pos = 20;
 int btnY_dist = 30;
-int btn_num = 15;          // parametri aula misurabili complessivamente
+int btn_num = 20;          // parametri aula misurabili complessivamente
 int btn_num_ON = 15;        // misure visibili modificabili a video dall'utente
 
 int misure_n = btn_num;    // matrici valori e misurazioni
@@ -18,17 +30,18 @@ int bordo_aula_def;
 
 //PShape freccia;
 
-void setup() {            // setup valori iniziali                                       
+void setup() {            // setup valori iniziali      
+  Font1 = createFont("Arial Bold", 18);
   size(1100, 1000);
 //  crea_Shape();         // disegno freccia quote
-
+  
                           // parametri aula misurabili
-  misure[0] = 480;   // aulaX
-  misure[1] = 600;   // aulaY
-  misure[2] = 60;    // bancoX
-  misure[3] = 40;    // bancoY
-  misure[4] = 100;   // interbancoX
-  misure[5] = 100;   // interbancoY
+  misure[0] = 640;   // aulaX
+  misure[1] = 640;   // aulaY
+  misure[2] = 70;    // bancoX
+  misure[3] = 45;    // bancoY
+  misure[4] = 140;   // interbancoX
+  misure[5] = 140;   // interbancoY
   misure[6] = 30;    // distanza fondo aula
   misure[7] = 30;    // distanza bordi aula
   misure[8] = 30;    // spazio-insY dal muro lavagna
@@ -44,16 +57,16 @@ void setup() {            // setup valori iniziali
   incrementi[1] = 5;  // aulaY
   incrementi[2] = 5;  // bancoX
   incrementi[3] = 5;  // bancoY
-  incrementi[4] = 5;  // interbancoX
-  incrementi[5] = 5;  // interbancoY
-  incrementi[6] = 5;  // distanza fondo aula  
-  incrementi[7] = 5;  // distanza bordo aula   
-  incrementi[8] = 5;  // spazio-insY dal muro lavagna
+  incrementi[4] = 1;  // interbancoX
+  incrementi[5] = 1;  // interbancoY
+  incrementi[6] = 1;  // distanza fondo aula  
+  incrementi[7] = 1;  // distanza bordo aula   
+  incrementi[8] = 1;  // spazio-insY dal muro lavagna
   incrementi[9] = 5;  // cattedraX
   incrementi[10] = 5; // cattedraY 
   incrementi[11] = 5; // distanza professore
   incrementi[12] = 5; // posizione cattedra
-  incrementi[13] = 5; // passaggio più largo
+  incrementi[13] = 1; // passaggio più largo
   incrementi[14] = 1; // banchi aggiuntivi
 
                            // valori min e max per le misure
@@ -98,7 +111,7 @@ void setup() {            // setup valori iniziali
   
   min_max_valori[14][0]= 0; // riga aggiuntiva
   min_max_valori[14][1]= 2; // riga aggiuntiva 
-
+  
                            // label pulsanti e valori
   btn_label[0] = "AulaX";
   btn_label[1] = "AulaY";
@@ -115,11 +128,37 @@ void setup() {            // setup valori iniziali
   btn_label[12] = "pos cattedra";
   btn_label[13] = "fila +larga";
   btn_label[14] = "banchi agg";
+  btn_label[15] = "Aula X";
+  btn_label[16] = "Aula Y";
+
+  c = new GUIController(this);
+  t1 = new IFTextField("Text Field", btnX_pos, btnY_pos + btnY_dist*15, 50, str(misure[0]));
+  t2 = new IFTextField("Text Field", btnX_pos, btnY_pos + btnY_dist*16, 50, str(misure[1]));
+  l1 = new IFLabel(btn_label[15], btnX_pos+60, btnY_pos + 15*btnY_dist);
+  l2 = new IFLabel(btn_label[16], btnX_pos+60, btnY_pos + 16*btnY_dist);
+  txtNomeAula = new IFTextField("Text Field", btnX_pos, btnY_pos + btnY_dist*17, 170, "Nome aula");
+  b = new IFButton("Calcola", btnX_pos, btnY_pos + btnY_dist*18, 50);
+  b1 = new IFButton("Fai PDF", btnX_pos, btnY_pos + btnY_dist*19, 50);
+
+  
+  c.add(t1);
+  c.add(t2);
+  c.add(l1);
+  c.add(l2);
+  c.add(b);
+  c.add(b1);
+  c.add(txtNomeAula);
+  b.addActionListener(this);
+  b1.addActionListener(this);
 
 } 
 
-void draw() {
 
+void draw() {
+if (record) {
+  // Note that #### will be replaced with the frame number. Fancy!
+  beginRecord(PDF, "frame-####.pdf"); 
+}
 background(100);
 int x0 = 20; // origine disegno aula
 int y0 = 50; // origine disegno aula
@@ -137,7 +176,13 @@ int y0 = 50; // origine disegno aula
  int sp_insegnante = misure[8] + misure[11];
  calcolo_interassi(misure[0], misure[1], misure[2], misure[3], misure[4], misure[5], misure[6], misure[7], sp_insegnante, misure[13]);                // calcolo interassi
  disegna_banchi(x0, y0, misure[0], misure[1], misure[2], misure[3], misure[6], misure[8], misure[9], misure[10], misure[11], misure[12], misure[13]); // disegna banchi
-//saveFrame("immagine-####.jpg"); 
+//saveFrame("immagine-####.jpg");
+textFont(Font1);
+text(txtNomeAula.getValue(), 20,30);
+  if (record) {
+    endRecord();
+    record = false;
+  }
 }
 
 void mouseReleased()  {                                                    // CLICK DELLA PULSANTIERA VALORI
@@ -341,4 +386,14 @@ void carta_millimetrata(int x0, int y0, int aulaX, int aulaY){
     line(x0, y0 + i, x0 + aulaX, y0 + i);
   }
 stroke(0);
+}
+
+void actionPerformed(GUIEvent e) {
+ if (e.getSource() == b) {
+   misure[0] = int(t1.getValue());    
+   misure[1] = int(t2.getValue());
+ }
+ if (e.getSource() == b1) {
+   record = true;  
+ }
 }
